@@ -130,7 +130,21 @@ def generate_audio(
         "include_prefix": include_prefix,
     }
     buffer = io.StringIO()
-    with contextlib.redirect_stdout(buffer):
+    
+    class StreamingWriter(io.TextIOBase):
+        def write(self, s):
+            buffer.write(s)
+            # emit partial logs while generating
+            yield_log = buffer.getvalue()
+            yield None, None, yield_log
+            return len(s)
+
+    # patch stdout temporarily
+    old_stdout = os.sys.stdout
+    streamer = StreamingWriter()
+    os.sys.stdout = streamer
+
+    try:
         result = dia.generate(
             script,
             config=config,
@@ -138,6 +152,17 @@ def generate_audio(
             verbose=True,
             **kwargs,
         )
+    finally:
+        os.sys.stdout = old_stdout
+
+    # with contextlib.redirect_stdout(buffer):
+    #     result = dia.generate(
+    #         script,
+    #         config=config,
+    #         output_wav=None,
+    #         verbose=True,
+    #         **kwargs,
+    #     )
     waveform = result.waveform.detach().cpu().numpy()
     sample_rate = result.sample_rate
     timestamps = result.timestamps
