@@ -215,7 +215,7 @@ Compose dialogue, attach optional voice prompts, and generate audio (CUDA graphs
                     generate_btn = gr.Button("Generate", variant="primary")
             with gr.Column(scale=1):
                 gr.Markdown("### Output")
-                audio_out = gr.Audio(label="Waveform", interactive=True, streaming=True, autoplay=True)
+                audio_out = gr.Audio(label="Waveform", interactive=False, streaming=True, autoplay=True)
                 timestamps = gr.Dataframe(
                     headers=["word", "seconds"], label="Timestamps"
                 )
